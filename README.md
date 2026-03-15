@@ -2,7 +2,7 @@
 
 Stealth Engine, web sitelerinin bot tespit sistemlerini atlatmak için geliştirilmiş bir tarayıcı otomasyon altyapısıdır. Standart otomasyon araçlarının JavaScript katmanında yaptığı kimlik gizleme işlemlerini, tarayıcının C++ implementasyon katmanında gerçekleştirir. Bu sayede siteler JS üzerinden kontrol yaptığında bile sistem gerçek bir kullanıcı olarak görünür.
 
-
+https://github.com/user-attachments/assets/edeada47-e30e-4f76-87c5-f10d10ea664a
 
 Proje; bir FastAPI backend, Selenium tabanlı tarayıcı motoru ve bunları tek arayüzden yöneten bir dashboard'dan oluşur.
 
