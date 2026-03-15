@@ -36,6 +36,40 @@ Bir siteye otomatik araçla girildiğinde tespit sistemleri onlarca farklı siny
 | Frontend | HTML / CSS / JS | Dashboard arayüzü, framework bağımlılığı yok |
 
 ---
+## Proje Yapısı
+
+```
+stealth-engine/
+├── main.py                         # FastAPI entrypoint
+├── requirements.txt
+├── .env                            # Konfigürasyon
+│
+├── config/
+│   └── settings.py                 # Pydantic Settings
+│
+├── backend/
+│   ├── core/
+│   │   ├── browser.py              # StealthBrowser ana sınıfı
+│   │   ├── fingerprint.py          # Fingerprint randomizer
+│   │   └── scraper.py              # ScraperService
+│   ├── api/
+│   │   └── routes.py               # FastAPI endpoint'leri
+│   └── utils/
+│       ├── logger.py               # Loguru logger
+│       └── proxy_manager.py        # Proxy yönetimi
+│
+├── frontend/
+│   └── index.html                  # Cyberpunk dashboard (aynı porttan serve edilir)
+│
+├── data/
+│   └── proxies/
+│       └── proxies.txt             # Proxy listesi
+│
+└── logs/
+    └── stealth.log                 # Otomatik oluşur
+```
+
+---
 
 ## Kurulum
 
