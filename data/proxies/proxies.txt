@@ -1,0 +1,14 @@
+# Proxy listesi — her satır bir proxy
+# Format: protocol://user:pass@host:port
+# Yorum satırları # ile başlar
+
+# HTTP proxyleri
+# http://kullanici:sifre@proxy1.example.com:8080
+# http://kullanici:sifre@proxy2.example.com:3128
+
+# SOCKS5 proxyleri
+# socks5://kullanici:sifre@proxy3.example.com:1080
+
+# Auth gerektirmeyen
+# http://185.199.228.220:7300
+# http://185.199.229.156:7300

@@ -1,0 +1,26 @@
+2026-03-15 03:26:49 | INFO     | backend.utils.proxy_manager:_load:29 — 0 proxy yüklendi.
+2026-03-15 03:26:49 | INFO     | main:startup:48 — ==================================================
+2026-03-15 03:26:49 | INFO     | main:startup:49 —   STEALTH ENGINE API başlatıldı
+2026-03-15 03:26:49 | INFO     | main:startup:50 —   http://0.0.0.0:8000
+2026-03-15 03:26:49 | INFO     | main:startup:51 —   Docs: http://0.0.0.0:8000/docs
+2026-03-15 03:26:49 | INFO     | main:startup:52 — ==================================================
+2026-03-15 03:27:16 | INFO     | backend.core.browser:start:63 — Browser başlatıldı | UA: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/...
+2026-03-15 03:27:23 | INFO     | backend.core.browser:go:149 — Navigasyon: https://bot.sannysoft.com
+2026-03-15 03:27:24 | INFO     | backend.core.browser:screenshot:161 — Screenshot kaydedildi: data/bot_check.png
+2026-03-15 03:27:25 | INFO     | backend.core.browser:quit:71 — Browser kapatıldı.
+2026-03-15 03:27:25 | INFO     | backend.core.scraper:scrape:68 — Scrape tamamlandı: https://bot.sannysoft.com (17.71s)
+2026-03-15 03:29:56 | INFO     | backend.utils.proxy_manager:_load:29 — 0 proxy yüklendi.
+2026-03-15 03:29:56 | INFO     | main:startup:48 — ==================================================
+2026-03-15 03:29:56 | INFO     | main:startup:49 —   STEALTH ENGINE API başlatıldı
+2026-03-15 03:29:56 | INFO     | main:startup:50 —   http://0.0.0.0:8000
+2026-03-15 03:29:56 | INFO     | main:startup:51 —   Docs: http://0.0.0.0:8000/docs
+2026-03-15 03:29:56 | INFO     | main:startup:52 — ==================================================
+2026-03-15 03:30:27 | INFO     | backend.core.browser:start:63 — Browser başlatıldı | UA: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, l...
+2026-03-15 03:30:31 | INFO     | backend.core.browser:go:149 — Navigasyon: https://httpbin.org/headers
+2026-03-15 03:30:34 | INFO     | backend.core.browser:quit:71 — Browser kapatıldı.
+2026-03-15 03:30:34 | INFO     | backend.core.scraper:scrape:68 — Scrape tamamlandı: https://httpbin.org/headers (16.51s)
+2026-03-15 03:30:59 | INFO     | backend.core.browser:start:63 — Browser başlatıldı | UA: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, l...
+2026-03-15 03:31:07 | INFO     | backend.core.browser:go:149 — Navigasyon: https://bot.sannysoft.com
+2026-03-15 03:31:08 | INFO     | backend.core.browser:screenshot:161 — Screenshot kaydedildi: data/bot_check.png
+2026-03-15 03:31:09 | INFO     | backend.core.browser:quit:71 — Browser kapatıldı.
+2026-03-15 03:31:09 | INFO     | backend.core.scraper:scrape:68 — Scrape tamamlandı: https://bot.sannysoft.com (19.07s)

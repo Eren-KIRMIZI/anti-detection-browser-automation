@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stealth Engine — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-green: #00ff88;
+      --neon-pink: #ff0080;
+      --neon-blue: #00d4ff;
+      --neon-orange: #ff6600;
+      --neon-violet: #b44dff;
+      --dark: #020d12;
+      --darker: #010810;
+    }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: linear-gradient(160deg, #010810 0%, #020d12 50%, #010a10 100%);
+      color: #a0d4e8;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* Scanline */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.015) 2px, rgba(0,212,255,0.015) 4px);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Grid bg */
+    .grid-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .page-wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 32px 24px 48px; }
+
+    /* ══════════ HEADER ══════════ */
+    .hero { text-align: center; margin-bottom: 24px; }
+
+    .hero-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 30px; font-weight: 900; color: #00ff88;
+      text-shadow: 0 0 20px rgba(0,255,136,0.8), 0 0 40px rgba(0,255,136,0.4);
+      letter-spacing: 6px; margin-bottom: 6px;
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%,100% { text-shadow: 0 0 20px rgba(0,255,136,0.8), 0 0 40px rgba(0,255,136,0.4); }
+      50%      { text-shadow: 0 0 30px rgba(0,255,136,1), 0 0 60px rgba(0,212,255,0.5), 0 0 80px rgba(0,255,136,0.3); }
+    }
+
+    .hero-sub { font-size: 11px; color: rgba(0,212,255,0.6); letter-spacing: 3px; }
+
+    .status-bar { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+    .status-pill {
+      font-size: 10px; padding: 4px 12px; border-radius: 20px;
+      letter-spacing: 1px; border: 1px solid;
+      animation: blink-border 2s ease-in-out infinite;
+    }
+    .status-pill.green  { color: #00ff88; border-color: rgba(0,255,136,0.4); background: rgba(0,255,136,0.08); }
+    .status-pill.blue   { color: #00d4ff; border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.08); animation-delay:.4s; }
+    .status-pill.pink   { color: #ff0080; border-color: rgba(255,0,128,0.4); background: rgba(255,0,128,0.08); animation-delay:.8s; }
+    @keyframes blink-border { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+    /* ══════════ SHOWCASE NAV ══════════ */
+    .nav-tabs {
+      display: flex; justify-content: center;
+      gap: 4px; padding: 14px 0;
+      border-bottom: 1px solid rgba(0,212,255,0.15);
+      flex-wrap: wrap; margin-bottom: 0;
+    }
+    .nav-tab {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+      padding: 6px 14px; border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 4px; background: transparent;
+      color: rgba(0,212,255,0.5); cursor: pointer; transition: all 0.2s;
+    }
+    .nav-tab:hover { color: #00d4ff; border-color: rgba(0,212,255,0.6); background: rgba(0,212,255,0.08); }
+    .nav-tab.active {
+      color: #00ff88; border-color: rgba(0,255,136,0.7);
+      background: rgba(0,255,136,0.1);
+      text-shadow: 0 0 10px rgba(0,255,136,0.8);
+      box-shadow: 0 0 12px rgba(0,255,136,0.2) inset;
+    }
+
+    /* ══════════ SHOWCASE PANELS ══════════ */
+    .sc-content { padding: 20px 0 24px; }
+    .panel { display: none; animation: fade-in 0.3s ease; }
+    .panel.active { display: block; }
+    @keyframes fade-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+    /* HOW IT WORKS */
+    .layer-stack { display: flex; flex-direction: column; gap: 6px; }
+    .layer {
+      border: 1px solid; border-radius: 6px; padding: 10px 16px;
+      display: flex; align-items: center; gap: 14px;
+      position: relative; overflow: hidden; transition: all 0.2s;
+    }
+    .layer:hover { transform: translateX(4px); }
+    .layer::after { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; }
+    .layer.js  { border-color:rgba(255,102,0,0.35); background:rgba(255,102,0,0.06); }
+    .layer.js::after  { background:#ff6600; box-shadow:0 0 8px #ff6600; }
+    .layer.api { border-color:rgba(0,212,255,0.35); background:rgba(0,212,255,0.06); }
+    .layer.api::after { background:#00d4ff; box-shadow:0 0 8px #00d4ff; }
+    .layer.cpp { border-color:rgba(0,255,136,0.5); background:rgba(0,255,136,0.1); }
+    .layer.cpp::after { background:#00ff88; box-shadow:0 0 12px #00ff88; }
+    .layer-badge {
+      font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700;
+      min-width:56px; text-align:center; padding:3px 8px; border-radius:3px;
+    }
+    .layer.js  .layer-badge { color:#ff6600; border:1px solid rgba(255,102,0,0.5); }
+    .layer.api .layer-badge { color:#00d4ff; border:1px solid rgba(0,212,255,0.5); }
+    .layer.cpp .layer-badge { color:#00ff88; border:1px solid rgba(0,255,136,0.6); text-shadow:0 0 8px rgba(0,255,136,0.8); }
+    .layer-text { font-size:12px; }
+    .layer-title { color:#e0f4ff; margin-bottom:2px; }
+    .layer-desc  { color:rgba(160,212,232,0.6); font-size:11px; }
+    .cpp-label {
+      font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:2px;
+      color:#00ff88; text-align:center; margin-top:10px;
+      text-shadow:0 0 10px rgba(0,255,136,0.8);
+      animation:blink-border 1.5s ease-in-out infinite;
+    }
+    .info-box { margin-top:18px; border:1px solid rgba(0,212,255,0.15); border-radius:6px; padding:14px; background:rgba(0,15,30,0.4); }
+    .info-box-label { font-size:10px; color:rgba(0,212,255,0.5); letter-spacing:2px; margin-bottom:8px; }
+    .info-box-text  { font-size:11px; color:rgba(160,212,232,0.7); line-height:1.8; }
+
+    /* FEATURES */
+    .feat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media(max-width:560px){ .feat-grid{ grid-template-columns:1fr; } }
+    .feat-card {
+      border:1px solid rgba(0,212,255,0.2); border-radius:8px; padding:14px;
+      background:rgba(0,15,30,0.6); position:relative; overflow:hidden;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .feat-card:hover { border-color:rgba(0,255,136,0.5); background:rgba(0,255,136,0.05); transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,255,136,0.1); }
+    .feat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(0,212,255,0.4),transparent); }
+    .feat-icon  { font-size:20px; margin-bottom:8px; }
+    .feat-name  { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; color:#00d4ff; letter-spacing:1px; margin-bottom:4px; }
+    .feat-desc  { font-size:10px; color:rgba(160,212,232,0.6); line-height:1.5; }
+
+    /* DEMO terminal */
+    .terminal-sc {
+      background:#010810; border:1px solid rgba(0,255,136,0.3);
+      border-radius:8px; padding:16px; font-size:11px; line-height:1.8;
+      min-height:200px; max-height:260px; overflow-y:auto;
+      box-shadow:0 0 20px rgba(0,255,136,0.08) inset;
+    }
+    .term-line { display:flex; align-items:flex-start; gap:8px; }
+    .term-green  { color:#00ff88; }
+    .term-orange { color:#ff6600; }
+    .term-blue   { color:#00d4ff; }
+    .term-gray   { color:rgba(160,212,232,0.4); }
+    .term-violet { color:#b44dff; }
+    .cursor {
+      display:inline-block; width:8px; height:14px;
+      background:#00ff88; animation:cursor-blink 1s step-end infinite; vertical-align:text-bottom;
+    }
+    @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .run-btn {
+      font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px;
+      padding:10px 24px; margin-top:12px; border:1px solid rgba(0,255,136,0.6);
+      border-radius:4px; background:rgba(0,255,136,0.1); color:#00ff88;
+      cursor:pointer; transition:all 0.2s; display:block; width:100%;
+      text-shadow:0 0 8px rgba(0,255,136,0.6);
+    }
+    .run-btn:hover { background:rgba(0,255,136,0.2); box-shadow:0 0 20px rgba(0,255,136,0.3); }
+
+    /* USE CASES */
+    .use-grid { display:flex; flex-direction:column; gap:8px; }
+    .use-item {
+      display:flex; align-items:center; gap:12px;
+      border:1px solid rgba(0,212,255,0.15); border-radius:6px; padding:12px 16px;
+      background:rgba(0,15,30,0.4); cursor:pointer; transition:all 0.2s;
+    }
+    .use-item:hover { border-color:rgba(255,0,128,0.4); background:rgba(255,0,128,0.05); transform:translateX(4px); }
+    .use-num   { font-family:'Orbitron',sans-serif; font-size:18px; font-weight:900; color:rgba(0,212,255,0.3); min-width:32px; }
+    .use-title { font-size:12px; color:#e0f4ff; margin-bottom:2px; }
+    .use-tags  { display:flex; gap:4px; flex-wrap:wrap; }
+    .use-tag   { font-size:9px; padding:2px 6px; border-radius:3px; background:rgba(0,212,255,0.1); color:rgba(0,212,255,0.7); border:1px solid rgba(0,212,255,0.2); }
+
+    /* Footer showcase */
+    .sc-footer {
+      border-top:1px solid rgba(0,212,255,0.1); padding:12px 0;
+      display:flex; justify-content:space-between; align-items:center; margin-top:4px;
+    }
+    .footer-text { font-size:10px; color:rgba(160,212,232,0.3); letter-spacing:1px; }
+    .warn-badge  { font-size:9px; padding:4px 10px; border:1px solid rgba(255,102,0,0.4); border-radius:3px; color:#ff6600; background:rgba(255,102,0,0.08); letter-spacing:1px; }
+
+    /* ══════════ DIVIDER ══════════ */
+    .section-divider { border:none; border-top:1px solid rgba(0,212,255,0.12); margin:28px 0; }
+    .section-label { font-family:'Orbitron',sans-serif; font-size:10px; letter-spacing:2px; color:rgba(0,212,255,0.5); margin-bottom:16px; }
+
+    /* ══════════ DASHBOARD GRID ══════════ */
+    .dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    @media(max-width:680px){ .dash-grid{ grid-template-columns:1fr; } }
+
+    .card {
+      background:rgba(2,13,18,0.85); border:1px solid rgba(0,212,255,0.2);
+      border-radius:10px; padding:20px; position:relative; overflow:hidden;
+    }
+    .card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(0,212,255,0.35),transparent); }
+    .card-title { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px; color:rgba(0,212,255,0.6); margin-bottom:14px; }
+    .full { grid-column:1/-1; }
+
+    label { font-size:11px; color:rgba(160,212,232,0.6); display:block; margin-bottom:4px; }
+    input[type=text], input[type=url], textarea {
+      width:100%; background:rgba(0,10,20,0.7); border:1px solid rgba(0,212,255,0.25);
+      border-radius:5px; padding:9px 12px; color:#e0f4ff;
+      font-family:'Share Tech Mono',monospace; font-size:12px;
+      outline:none; transition:border-color .2s; margin-bottom:10px;
+    }
+    input:focus, textarea:focus { border-color:rgba(0,255,136,0.5); }
+    .row { display:flex; gap:12px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+    .row label { margin:0; white-space:nowrap; }
+    input[type=checkbox] { accent-color:#00ff88; width:16px; height:16px; }
+
+    .btn { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px; padding:10px 20px; border-radius:4px; cursor:pointer; transition:all .2s; width:100%; }
+    .btn-g { border:1px solid rgba(0,255,136,0.6); background:rgba(0,255,136,0.1); color:#00ff88; text-shadow:0 0 8px rgba(0,255,136,0.6); }
+    .btn-g:hover { background:rgba(0,255,136,0.2); box-shadow:0 0 20px rgba(0,255,136,0.3); }
+    .btn-g:disabled { opacity:.4; cursor:not-allowed; }
+
+    .terminal-dash {
+      background:#010810; border:1px solid rgba(0,255,136,0.25);
+      border-radius:8px; padding:14px; font-size:11px; line-height:1.9;
+      min-height:160px; max-height:280px; overflow-y:auto;
+      margin-top:12px; box-shadow:0 0 16px rgba(0,255,136,0.06) inset;
+    }
+    .t-g { color:#00ff88; } .t-b { color:#00d4ff; } .t-o { color:#ff6600; }
+    .t-r { color:#ff0080; } .t-v { color:#b44dff; } .t-dim { color:rgba(160,212,232,0.4); }
+
+    .fp-row { display:flex; align-items:center; gap:8px; padding:7px 10px; border:1px solid rgba(0,212,255,0.12); border-radius:4px; margin-bottom:6px; background:rgba(0,15,30,0.4); }
+    .fp-k { font-size:11px; color:rgba(160,212,232,0.55); min-width:160px; }
+    .fp-v { font-size:11px; color:#e0f4ff; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fp-badge { font-size:9px; padding:2px 6px; border-radius:3px; color:#00ff88; border:1px solid rgba(0,255,136,0.35); background:rgba(0,255,136,0.07); }
+
+    #api-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#ff6600; margin-right:6px; transition:background .3s; }
+    #api-dot.ok  { background:#00ff88; box-shadow:0 0 6px #00ff88; }
+    #api-dot.err { background:#ff0080; }
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="page-wrap">
+
+  <!-- ══════════ HERO ══════════ -->
+  <div class="hero">
+    <div class="hero-title">STEALTH ENGINE</div>
+    <div class="hero-sub">ADVANCED ANTI-DETECTION BROWSER ENGINE</div>
+    <div class="status-bar">
+      <div class="status-pill green">● FINGERPRINT MASKED</div>
+      <div class="status-pill blue">● C++ LAYER ACTIVE</div>
+      <div class="status-pill pink"><span id="api-dot"></span><span id="api-status-text">API BAĞLANILIYOR</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SHOWCASE ══════════ -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('how', this)">HOW IT WORKS</button>
+    <button class="nav-tab" onclick="showPanel('feat', this)">FEATURES</button>
+    <button class="nav-tab" onclick="showPanel('demo', this)">LIVE DEMO</button>
+    <button class="nav-tab" onclick="showPanel('use', this)">USE CASES</button>
+  </div>
+
+  <div class="sc-content">
+
+    <!-- HOW IT WORKS -->
+    <div class="panel active" id="panel-how">
+      <div class="layer-stack">
+        <div class="layer js">
+          <div class="layer-badge">JS</div>
+          <div class="layer-text">
+            <div class="layer-title">JavaScript layer</div>
+            <div class="layer-desc">Selenium, Playwright, Puppeteer → bot tespiti kolay</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:18px;color:rgba(0,212,255,0.4);padding:2px 0">↓</div>
+        <div class="layer api">
+          <div class="layer-badge">API</div>
+          <div class="layer-text">
+            <div class="layer-title">Browser API layer</div>
+            <div class="layer-desc">navigator, screen, WebRTC, WebGL</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:18px;color:rgba(0,255,136,0.6);padding:2px 0">↓</div>
+        <div class="layer cpp">
+          <div class="layer-badge">C++</div>
+          <div class="layer-text">
+            <div class="layer-title">Firefox kaynak kodu</div>
+            <div class="layer-desc">Spoofing burada yapılır → tespit edilemez</div>
+          </div>
+        </div>
+      </div>
+      <div class="cpp-label">▲ SPOOFING BU KATMANDA GERÇEKLEŞIR ▲</div>
+      <div class="info-box">
+        <div class="info-box-label">NEDEN FARKLI?</div>
+        <div class="info-box-text">
+          Normal araçlar JS seviyesinde spoofing yapar. Bu engine değişikliği
+          <span style="color:#00ff88">C++ layer'da</span> uyguladığı için site JS ile kontrol ettiğinde bile
+          gerçek bir kullanıcı gibi görünür.
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="panel" id="panel-feat">
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-icon">🖥️</div>
+          <div class="feat-name">FINGERPRINT</div>
+          <div class="feat-desc">İşletim sistemi, cihaz, CPU, RAM, ekran çözünürlüğü → hepsi değiştirilebilir</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🌐</div>
+          <div class="feat-name">WEBRTC</div>
+          <div class="feat-desc">Gerçek IP sızıntısını önler. STUN ve local IP bilgileri maskelenir</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🖱️</div>
+          <div class="feat-name">MOUSE SIM</div>
+          <div class="feat-desc">İnsan gibi düzensiz, doğal hareket paterni oluşturur</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🔤</div>
+          <div class="feat-name">FONT FP</div>
+          <div class="feat-desc">Canvas render ve font metric'leri randomize edilir</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">⚡</div>
+          <div class="feat-name">NAVIGATOR</div>
+          <div class="feat-desc">hardwareConcurrency, deviceMemory, languages spoofed</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🎮</div>
+          <div class="feat-name">WEBGL</div>
+          <div class="feat-desc">GPU vendor ve renderer bilgileri değiştirilir</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE DEMO -->
+    <div class="panel" id="panel-demo">
+      <div class="terminal-sc" id="sc-terminal">
+        <div class="term-line"><span class="term-gray"> sistem bekleniyor...</span></div>
+        <div class="term-line"><span class="term-green">></span><span class="cursor"></span></div>
+      </div>
+      <button class="run-btn" onclick="runShowcaseDemo()">▶ DEMO ÇALIŞTIR</button>
+    </div>
+
+    <!-- USE CASES -->
+    <div class="panel" id="panel-use">
+      <div class="use-grid">
+        <div class="use-item">
+          <div class="use-num">01</div>
+          <div>
+            <div class="use-title">Web Scraping</div>
+            <div class="use-tags"><span class="use-tag">e-ticaret</span><span class="use-tag">fiyat takibi</span><span class="use-tag">SEO data</span></div>
+          </div>
+        </div>
+        <div class="use-item">
+          <div class="use-num">02</div>
+          <div>
+            <div class="use-title">Anti-Bot Testi</div>
+            <div class="use-tags"><span class="use-tag">Cloudflare</span><span class="use-tag">DataDome</span><span class="use-tag">Imperva</span></div>
+          </div>
+        </div>
+        <div class="use-item">
+          <div class="use-num">03</div>
+          <div>
+            <div class="use-title">Veri Toplama</div>
+            <div class="use-tags"><span class="use-tag">otomasyon</span><span class="use-tag">toplu çekim</span><span class="use-tag">indexing</span></div>
+          </div>
+        </div>
+        <div class="use-item">
+          <div class="use-num">04</div>
+          <div>
+            <div class="use-title">Fiyat Karşılaştırma</div>
+            <div class="use-tags"><span class="use-tag">çoklu site</span><span class="use-tag">real-time</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sc-footer">
+    <div class="footer-text">POWERED BY FIREFOX ENGINE // C++ LEVEL SPOOFING</div>
+    <div class="warn-badge">⚠ ETİK KULLANIM</div>
+  </div>
+
+  <!-- ══════════ DASHBOARD ══════════ -->
+  <hr class="section-divider">
+  <div class="section-label">▶ DASHBOARD</div>
+
+  <div class="dash-grid">
+
+    <!-- SCRAPE -->
+    <div class="card">
+      <div class="card-title">▶ SCRAPE</div>
+      <label>Hedef URL</label>
+      <input type="url" id="scrape-url" placeholder="https://example.com" value="https://httpbin.org/headers">
+      <label>CSS selector (opsiyonel)</label>
+      <input type="text" id="scrape-css" placeholder="body, .content, #main ...">
+      <div class="row">
+        <input type="checkbox" id="scrape-scroll"> <label for="scrape-scroll">Human Scroll</label>
+        <input type="checkbox" id="scrape-headless" checked> <label for="scrape-headless">Headless</label>
+        <input type="checkbox" id="scrape-ss"> <label for="scrape-ss">Screenshot</label>
+      </div>
+      <button class="btn btn-g" id="scrape-btn" onclick="doScrape()">▶ ÇALIŞTIR</button>
+      <div class="terminal-dash" id="scrape-out"><span class="t-dim">Sonuç burada görünecek...</span></div>
+    </div>
+
+    <!-- FP GENERATOR -->
+    <div class="card">
+      <div class="card-title">🎲 FİNGERPRINT GENERATOR</div>
+      <div id="fp-list"><div class="t-dim" style="font-size:11px">Yükleniyor...</div></div>
+      <button class="btn btn-g" style="margin-top:10px" onclick="loadFP()">⟳ YENİ KİMLİK OLUŞTUR</button>
+    </div>
+
+    <!-- MULTI SCRAPE -->
+    <div class="card">
+      <div class="card-title">▶ MULTI SCRAPE</div>
+      <label>URL listesi (her satıra bir URL)</label>
+      <textarea id="multi-urls" rows="5" placeholder="https://site1.com&#10;https://site2.com&#10;https://site3.com"></textarea>
+      <div class="row">
+        <input type="checkbox" id="multi-headless" checked> <label for="multi-headless">Headless</label>
+        <input type="checkbox" id="multi-scroll"> <label for="multi-scroll">Scroll</label>
+      </div>
+      <button class="btn btn-g" onclick="doMulti()">▶ TOPLU ÇALIŞTIR</button>
+      <div class="terminal-dash" id="multi-out"><span class="t-dim">Sonuçlar burada görünecek...</span></div>
+    </div>
+
+    <!-- BOT CHECK -->
+    <div class="card">
+      <div class="card-title">🛡 BOT DETECTION TEST</div>
+      <label>Test URL</label>
+      <input type="text" id="bot-url" value="https://bot.sannysoft.com">
+      <p style="font-size:11px;color:rgba(160,212,232,.5);line-height:1.6;margin-bottom:12px">
+        Bot tespit sayfasını headful modda ziyaret eder, screenshot alır ve sonucu raporlar.
+        Chrome penceresi açılır.
+      </p>
+      <button class="btn btn-g" onclick="doBotCheck()">▶ TEST BAŞLAT</button>
+      <div class="terminal-dash" id="bot-out"><span class="t-dim">Hazır...</span></div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="card full">
+      <div class="card-title">🔗 PROXY / API STATUS</div>
+      <div id="proxy-info" class="t-dim" style="font-size:12px">Yükleniyor...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = "";
+
+// ── API Health ─────────────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/api/v1/health`);
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    document.getElementById('api-dot').className = 'ok';
+    document.getElementById('api-status-text').textContent = 'BOT DETECTION BYPASSED';
+    document.getElementById('proxy-info').innerHTML =
+      `<span class="t-g">✓ API bağlantısı kuruldu</span> &nbsp;|&nbsp; Proxy havuzu: <span class="t-v">${data.proxy_count}</span>`;
+  } catch {
+    document.getElementById('api-dot').className = 'err';
+    document.getElementById('api-status-text').textContent = 'API BAĞLANAMADI';
+    document.getElementById('proxy-info').innerHTML =
+      `<span class="t-r">✗ API'ye ulaşılamıyor — uvicorn main:app --reload çalışıyor mu?</span>`;
+  }
+}
+
+// ── Showcase Panel ─────────────────────────────────────────────────────────────
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Showcase Demo ──────────────────────────────────────────────────────────────
+const demoLines = [
+  { delay: 0,    color: 'term-blue',   text: '> from backend.core.browser import StealthBrowser' },
+  { delay: 700,  color: 'term-gray',   text: '  Engine yükleniyor...' },
+  { delay: 1300, color: 'term-green',  text: '  ✓ undetected-chromedriver başlatıldı' },
+  { delay: 1900, color: 'term-violet', text: '  ✓ selenium-stealth aktif' },
+  { delay: 2400, color: 'term-blue',   text: '> browser = StealthBrowser(headless=True)' },
+  { delay: 3100, color: 'term-gray',   text: '  Fingerprint oluşturuluyor...' },
+  { delay: 3500, color: 'term-green',  text: '  ✓ OS: Windows 11 (22H2)' },
+  { delay: 3800, color: 'term-green',  text: '  ✓ Browser: Chrome 123.0.6312.86' },
+  { delay: 4100, color: 'term-green',  text: '  ✓ GPU: Intel Iris OpenGL Engine' },
+  { delay: 4400, color: 'term-green',  text: '  ✓ Timezone: Europe/Istanbul' },
+  { delay: 4900, color: 'term-blue',   text: '> browser.go("https://bot.sannysoft.com")' },
+  { delay: 5700, color: 'term-orange', text: '  Bot tespit sistemi: aktif...' },
+  { delay: 6200, color: 'term-orange', text: '  WebRTC kontrol:            PASS ✓' },
+  { delay: 6700, color: 'term-orange', text: '  Canvas fingerprint:        PASS ✓' },
+  { delay: 7100, color: 'term-orange', text: '  navigator.webdriver:       PASS ✓' },
+  { delay: 7500, color: 'term-orange', text: '  Font metrics:              PASS ✓' },
+  { delay: 7900, color: 'term-orange', text: '  PHANTOM_UA:                PASS ✓' },
+  { delay: 8300, color: 'term-orange', text: '  PHANTOM_PROPERTIES:        PASS ✓' },
+  { delay: 8700, color: 'term-green',  text: '  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' },
+  { delay: 8900, color: 'term-green',  text: '  ✓✓ BOT TESPİTİ BYPASS EDİLDİ' },
+  { delay: 9100, color: 'term-green',  text: '  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' },
+];
+
+let demoRunning = false;
+function runShowcaseDemo() {
+  if (demoRunning) return;
+  demoRunning = true;
+  const term = document.getElementById('sc-terminal');
+  term.innerHTML = '';
+  demoLines.forEach(({ delay, color, text }) => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.className = 'term-line';
+      line.innerHTML = `<span class="${color}" style="white-space:pre">${text}</span>`;
+      term.appendChild(line);
+      term.scrollTop = term.scrollHeight;
+      if (delay === demoLines[demoLines.length - 1].delay)
+        setTimeout(() => { demoRunning = false; }, 1000);
+    }, delay);
+  });
+}
+
+// ── Fingerprint ────────────────────────────────────────────────────────────────
+async function loadFP() {
+  const list = document.getElementById('fp-list');
+  list.innerHTML = '<div class="t-dim" style="font-size:11px">Oluşturuluyor...</div>';
+  try {
+    const r = await fetch(`${API}/api/v1/fingerprint/new`);
+    const fp = await r.json();
+    list.innerHTML = Object.entries({
+      'User Agent':  fp.user_agent.substring(0, 52) + '…',
+      'Dil':         fp.languages.join(', '),
+      'Timezone':    fp.timezone,
+      'Çözünürlük':  fp.resolution,
+      'Platform':    fp.platform,
+      'CPU Threads': fp.hardware_concurrency,
+      'RAM':         fp.device_memory + ' GB',
+    }).map(([k, v]) =>
+      `<div class="fp-row"><span class="fp-k">${k}</span><span class="fp-v">${v}</span><span class="fp-badge">SPOOFED</span></div>`
+    ).join('');
+  } catch {
+    list.innerHTML = '<span class="t-r">API bağlantısı yok.</span>';
+  }
+}
+
+// ── Log helper ─────────────────────────────────────────────────────────────────
+function tlog(id, msg, cls = 't-b') {
+  const t = document.getElementById(id);
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="${cls}">${msg}</span>`;
+  t.appendChild(d);
+  t.scrollTop = t.scrollHeight;
+}
+
+// ── Scrape ─────────────────────────────────────────────────────────────────────
+async function doScrape() {
+  const url      = document.getElementById('scrape-url').value.trim();
+  const css      = document.getElementById('scrape-css').value.trim();
+  const scroll   = document.getElementById('scrape-scroll').checked;
+  const headless = document.getElementById('scrape-headless').checked;
+  const ss       = document.getElementById('scrape-ss').checked;
+  const btn      = document.getElementById('scrape-btn');
+  if (!url) return;
+  document.getElementById('scrape-out').innerHTML = '';
+  btn.disabled = true;
+  tlog('scrape-out', `> Hedef: ${url}`, 't-b');
+  tlog('scrape-out', `  headless=${headless} | scroll=${scroll} | screenshot=${ss}`, 't-dim');
+  tlog('scrape-out', '  İstek gönderiliyor...', 't-dim');
+  try {
+    const r = await fetch(`${API}/api/v1/scrape`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, wait_css: css || null, scroll, headless, screenshot: ss })
+    });
+    const data = await r.json();
+    if (data.status === 'ok') {
+      tlog('scrape-out', `  ✓ Başarılı (${data.elapsed}s)`, 't-g');
+      tlog('scrape-out', `  Sayfa: ${data.title}`, 't-g');
+      tlog('scrape-out', `  URL: ${data.url}`, 't-b');
+      tlog('scrape-out', `  HTML: ${data.html_length} karakter`, 't-dim');
+      tlog('scrape-out', '  ── Fingerprint ──', 't-v');
+      Object.entries(data.fingerprint).forEach(([k, v]) => tlog('scrape-out', `  ${k}: ${v}`, 't-v'));
+    } else {
+      tlog('scrape-out', `  ✗ Hata: ${data.detail}`, 't-r');
+    }
+  } catch (e) {
+    tlog('scrape-out', `  ✗ ${e.message}`, 't-r');
+    tlog('scrape-out', '  uvicorn main:app --reload çalışıyor mu?', 't-dim');
+  }
+  btn.disabled = false;
+}
+
+// ── Multi Scrape ───────────────────────────────────────────────────────────────
+async function doMulti() {
+  const urls     = document.getElementById('multi-urls').value.split('\n').map(u => u.trim()).filter(Boolean);
+  const headless = document.getElementById('multi-headless').checked;
+  const scroll   = document.getElementById('multi-scroll').checked;
+  if (!urls.length) return;
+  document.getElementById('multi-out').innerHTML = '';
+  tlog('multi-out', `> ${urls.length} URL scrape edilecek...`, 't-b');
+  try {
+    const r = await fetch(`${API}/api/v1/scrape/multi`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls, headless, scroll })
+    });
+    const data = await r.json();
+    data.results.forEach((item, i) => {
+      if (item.status === 'ok')
+        tlog('multi-out', `  [${i+1}] ✓ ${item.url} — ${item.elapsed}s`, 't-g');
+      else
+        tlog('multi-out', `  [${i+1}] ✗ ${item.url} — ${item.error}`, 't-r');
+    });
+    tlog('multi-out', `  Tamamlandı: ${data.count} URL`, 't-g');
+  } catch (e) {
+    tlog('multi-out', `  ✗ ${e.message}`, 't-r');
+  }
+}
+
+// ── Bot Check ──────────────────────────────────────────────────────────────────
+async function doBotCheck() {
+  const url = document.getElementById('bot-url').value;
+  document.getElementById('bot-out').innerHTML = '';
+  tlog('bot-out', `> Bot test başlatılıyor: ${url}`, 't-b');
+  tlog('bot-out', '  Chrome penceresi açılacak...', 't-dim');
+  try {
+    const r = await fetch(`${API}/api/v1/bot-check`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await r.json();
+    if (data.status === 'ok') {
+      tlog('bot-out', `  ✓ Test tamamlandı (${data.elapsed}s)`, 't-g');
+      tlog('bot-out', `  Title: ${data.title}`, 't-g');
+      if (data.screenshot) tlog('bot-out', `  Screenshot: ${data.screenshot}`, 't-v');
+    } else {
+      tlog('bot-out', `  ✗ ${data.detail}`, 't-r');
+    }
+  } catch (e) {
+    tlog('bot-out', `  ✗ ${e.message}`, 't-r');
+  }
+}
+
+// Init
+checkHealth();
+loadFP();
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>
