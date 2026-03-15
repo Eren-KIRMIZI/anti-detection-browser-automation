@@ -1,138 +1,96 @@
-# 🦊 Stealth Engine
+# Stealth Engine
 
-Anti-detection browser otomasyon projesi.
-**Stack:** FastAPI + undetected-chromedriver + Selenium Stealth + Cyberpunk Dashboard
+Stealth Engine, web sitelerinin bot tespit sistemlerini atlatmak için geliştirilmiş bir tarayıcı otomasyon altyapısıdır. Standart otomasyon araçlarının JavaScript katmanında yaptığı kimlik gizleme işlemlerini, tarayıcının C++ implementasyon katmanında gerçekleştirir. Bu sayede siteler JS üzerinden kontrol yaptığında bile sistem gerçek bir kullanıcı olarak görünür.
 
----
 
-## 📁 Proje Yapısı
 
-```
-stealth-engine/
-├── main.py                         # FastAPI entrypoint
-├── requirements.txt
-├── .env                            # Konfigürasyon
-│
-├── config/
-│   └── settings.py                 # Pydantic Settings
-│
-├── backend/
-│   ├── core/
-│   │   ├── browser.py              # StealthBrowser ana sınıfı
-│   │   ├── fingerprint.py          # Fingerprint randomizer
-│   │   └── scraper.py              # ScraperService
-│   ├── api/
-│   │   └── routes.py               # FastAPI endpoint'leri
-│   └── utils/
-│       ├── logger.py               # Loguru logger
-│       └── proxy_manager.py        # Proxy yönetimi
-│
-├── frontend/
-│   └── index.html                  # Cyberpunk dashboard (aynı porttan serve edilir)
-│
-├── data/
-│   └── proxies/
-│       └── proxies.txt             # Proxy listesi
-│
-└── logs/
-    └── stealth.log                 # Otomatik oluşur
-```
+Proje; bir FastAPI backend, Selenium tabanlı tarayıcı motoru ve bunları tek arayüzden yöneten bir dashboard'dan oluşur.
 
 ---
 
-## 🚀 Kurulum
+## Ne Yapar
+
+Bir siteye otomatik araçla girildiğinde tespit sistemleri onlarca farklı sinyali analiz eder. Stealth Engine bu sinyallerin tamamını maskeler:
+
+- `navigator.webdriver` alanı tanımsız bırakılarak Selenium'un en belirgin izi kaldırılır
+- İşletim sistemi, cihaz modeli, CPU çekirdek sayısı, RAM ve ekran çözünürlüğü rastgele ama tutarlı değerlerle doldurulur
+- WebRTC üzerinden gerçek IP adresinin sızması UDP politikası zorunlu kılınarak engellenir
+- Her oturumda gerçek bir Chrome sürümüne ait kullanıcı ajanı atanır
+- Fare hareketleri, sayfa kaydırma ve klavye girişleri insan davranışını taklit edecek şekilde simüle edilir
+- Proxy listesinden otomatik rotasyon yapılır; başarısız proxy'ler listeden çıkarılır
+
+---
+
+## Teknolojiler
+
+| Katman | Teknoloji | Kullanim Amaci |
+|---|---|---|
+| Backend | FastAPI | REST API, endpoint yönetimi, CORS |
+| Sunucu | uvicorn | ASGI sunucusu |
+| Tarayici Motoru | undetected-chromedriver | C++ seviyesinde otomasyon izlerini kaldırır |
+| Otomasyon | Selenium | Tarayıcı kontrolü ve element etkileşimi |
+| Stealth | selenium-stealth | JS özelliklerini gerçek değerlerle doldurur |
+| Fingerprint | fake-useragent | Güncel ve gerçek kullanıcı ajanı veritabanı |
+| Konfigurasyon | pydantic-settings | .env tabanlı tip güvenli ayar yönetimi |
+| Loglama | loguru | Renkli konsol çıktısı, dosya rotasyonu |
+| Frontend | HTML / CSS / JS | Dashboard arayüzü, framework bağımlılığı yok |
+
+---
+
+## Kurulum
+
+Python 3.11+ ve Google Chrome yüklü olmalıdır.
 
 ```bash
-# 1. Sanal ortam oluştur
+git clone https://github.com/kullanici/stealth-engine.git
+cd stealth-engine
+
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 2. Bağımlılıkları kur
 pip install -r requirements.txt
-
-# 3. Chrome yüklü olduğundan emin ol
-# undetected-chromedriver Chrome versiyonunu otomatik eşler
-
-# 4. .env dosyasını düzenle (opsiyonel)
-nano .env
 ```
 
----
-
-## ▶️ Çalıştır
+Gerekirse `.env` dosyasını düzenle, ardından başlat:
 
 ```bash
-# Geliştirme (hot-reload ile)
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# Prodüksiyon
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
-# Not: workers=1 önemli — undetected-chromedriver multi-process'te sorun çıkarabilir
 ```
 
-Tarayıcıda aç:
-- **Dashboard:** http://localhost:8000
-- **API Docs:** http://localhost:8000/docs
+- Dashboard: `http://localhost:8000`
+- API dokümantasyonu: `http://localhost:8000/docs`
 
 ---
 
-## 📡 API Endpoint'leri
+## API
 
-### GET `/api/v1/health`
-API ve proxy durumunu döndürür.
+| Method | Endpoint | Açiklama |
+|---|---|---|
+| GET | `/api/v1/health` | API ve proxy durumu |
+| GET | `/api/v1/fingerprint/new` | Rastgele fingerprint üret |
+| POST | `/api/v1/scrape` | Tek URL scrape et |
+| POST | `/api/v1/scrape/multi` | Toplu URL scrape et |
+| POST | `/api/v1/bot-check` | Bot tespit sayfasını ziyaret et |
 
-### GET `/api/v1/fingerprint/new`
-Rastgele bir fingerprint üretir.
-```json
-{
-  "user_agent": "Mozilla/5.0 ...",
-  "languages": ["tr-TR", "tr", "en-US"],
-  "timezone": "Europe/Istanbul",
-  "resolution": "1920x1080",
-  "platform": "Win32",
-  "hardware_concurrency": 8,
-  "device_memory": 16
-}
-```
-
-### POST `/api/v1/scrape`
-```json
-{
-  "url": "https://example.com",
-  "wait_css": "body",
-  "scroll": false,
-  "headless": true,
-  "screenshot": false
-}
-```
-
-### POST `/api/v1/scrape/multi`
-```json
-{
-  "urls": ["https://site1.com", "https://site2.com"],
-  "headless": true,
-  "scroll": false
-}
-```
-
-### POST `/api/v1/bot-check`
-```json
-{
-  "url": "https://bot.sannysoft.com"
-}
+```bash
+curl -X POST http://localhost:8000/api/v1/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "headless": true, "scroll": false}'
 ```
 
 ---
 
-## 🔧 Proxy Ayarı
+## Proxy Kullanimi
 
-`data/proxies/proxies.txt` dosyasına ekle:
+`data/proxies/proxies.txt` dosyasına her satıra bir proxy ekle:
+
 ```
-http://user:pass@host:port
+http://kullanici:sifre@host:port
 socks5://host:port
 ```
 
-`.env` içinde aktif et:
+`.env` içinde etkinleştir:
+
 ```
 PROXY_ENABLED=true
 PROXY_ROTATION=true
@@ -140,7 +98,7 @@ PROXY_ROTATION=true
 
 ---
 
-## 🐍 Python'da Doğrudan Kullanım
+## Dogrudan Kullanim
 
 ```python
 from backend.core.browser import StealthBrowser
@@ -151,25 +109,25 @@ with StealthBrowser(headless=True) as browser:
     browser.go("https://example.com")
     browser.human_scroll(times=3)
     print(browser.title())
-    print(browser.page_source()[:500])
 
 # Scraper servisi ile
 result = scraper.scrape(
-    url="https://httpbin.org/headers",
+    url="https://example.com",
     scroll=True,
     headless=True,
     screenshot=True,
 )
-print(result["title"])
 print(result["fingerprint"])
 ```
 
 ---
 
-## ⚠️ Önemli Notlar
+## Notlar
 
-- **Chrome** yüklü olmalı. undetected-chromedriver ChromeDriver'ı otomatik indirir.
-- `workers=1` kullan — her worker ayrı browser instance açar, multi-worker'da Chrome crash verebilir.
-- Proxy listesi boşsa proxy kullanılmaz, doğrudan bağlantı yapılır.
-- `CHROME_HEADLESS=false` ile Chrome penceresini görebilirsin (debug için).
-- Bot tespit testi (`/api/v1/bot-check`) headful modda çalışır, Chrome penceresi açar.
+- `workers=1` kullan — undetected-chromedriver çoklu worker ile sorun çıkarabilir
+- Bot tespit testi (`/api/v1/bot-check`) headful modda çalışır, Chrome penceresi açılır
+- Proxy listesi boşsa bağlantı doğrudan yapılır
+
+---
+
+Bu proje yalnızca etik ve yasal amaçlar doğrultusunda kullanılmalıdır.
